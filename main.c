@@ -1,16 +1,45 @@
 #include "global.h"
 
-int main(void) {
+bool stop = false;
+
+int main(int argc, char **argv) {
+    // no arguments allowed
+    if (argc >= 2) {
+        printf("%s : This program takes no arguments, please type your command\n"
+                "in the prompt.\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    // shell loop
+    while (stop == false) {
+        ysh();
+    }
+
+    // exit
+    // XXX: handle signals for ctrl+c
+    // XXX: cleanup functions
+    return EXIT_SUCCESS;
+}
+
+int ysh(void) {
     int pipefd[2];
+    int status;
 
     if (pipe(pipefd) == -1) {
         printf("Failed to pipe");
         return -1;
     }
 
-    int childpid = fork();
+    //pid_t parent = getpid();
+    //printf("parent process = %d\n", parent);
+
+    int childpid = 0;
+    if (stop == false) {
+        childpid = fork();
+    }
     if (childpid == 0) { // child
         // listen to the command from parent process
+        int ret = 0;
         char buf[BUFSIZ];
         char **prog = NULL;
 
@@ -34,7 +63,7 @@ int main(void) {
         }
 
         // execute the command
-        int ret = execvp(prog[0], prog);
+        ret = execvp(prog[0], prog);
 
         // clean the array of string allocated
         cleanPtr(prog);
@@ -43,13 +72,18 @@ int main(void) {
         exit(ret);
     } else if (childpid == -1) {
         perror("Failed to fork()\n");
-        return -1;
+        return EXIT_FAILURE;
     } else { // parent
         // read command as a string from user
         char *prog = readline(" > ");
+        if (strncmp(prog, EXIT, sizeof(prog) + 1) == 0) {
+            printf("exiting...\n");
+            stop = true;
+            return EXIT_SUCCESS;
+        }
 
         // send command to child process as a string
-        ssize_t bytes = write(pipefd[PIPE_WRITE], prog, strnlen(prog, BUFSIZ));
+        ssize_t bytes = write(pipefd[PIPE_WRITE], prog, sizeof(prog) + 1);
         if (bytes == -1) {
             printf("Failed to send command to child process\n");
         }
@@ -61,6 +95,9 @@ int main(void) {
             // read command output from child process
             xread(&pipefd[PIPE_READ]);
         }
+        wait(&status);
+        //pid_t child_p = wait(&status);
+        //printf("child process = %d\n", child_p);
     }
-    return 0;
+    return status;
 }
