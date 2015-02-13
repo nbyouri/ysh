@@ -1,6 +1,6 @@
 #include "global.h"
 
-bool stop = false;
+bool stop;
 
 int main(int argc, char **argv) {
     // no arguments allowed
@@ -8,11 +8,12 @@ int main(int argc, char **argv) {
         printf("%s : This program takes no arguments, please type your command\n"
                 "in the prompt.\n", argv[0]);
         return EXIT_FAILURE;
-    }
-
-    // shell loop
-    while (stop == false) {
-        ysh();
+    } else {
+        printf("Welcome to ysh, run `exit` to quit.\n");
+        // shell loop
+        while (stop == false) {
+            ysh();
+        }
     }
 
     // exit
@@ -78,7 +79,7 @@ int ysh(void) {
         char *prog = readline(" > ");
 
         // send command to child process as a string
-        ssize_t bytes = write(pipefd[PIPE_WRITE], prog, sizeof(prog) + 1);
+        ssize_t bytes = write(pipefd[PIPE_WRITE], prog, strlen(prog));
         if (bytes == -1) {
             printf("Failed to send command to child process\n");
         }

@@ -1,7 +1,5 @@
 #include "global.h"
 
-bool listen;
-
 // read string from user
 // XXX: sanitize
 // XXX: broken
