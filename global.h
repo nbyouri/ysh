@@ -16,4 +16,4 @@
 void cleanPtr(char **);
 char **stringToArray(char *, char *);
 char **readinput(void);
-void xread(int);
+void xread(int *);

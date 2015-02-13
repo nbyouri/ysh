@@ -1,17 +1,21 @@
 #include "global.h"
 
-void xread(int fd) {
+void xread(int *fd) {
     char buf[BUFSIZ];
     FILE *file;
-    if ((file = fdopen(fd, "r")) == NULL) {
+    file = fdopen(*fd, "r");
+    if (file == NULL) {
         perror("Failed to fdopen\n");
+        exit(EXIT_FAILURE);
     } else {
         while (!feof(file) &&
                 !ferror(file) &&
                 fgets(buf, sizeof(buf), file) != NULL) {
             printf("%s", buf);
         }
-        fclose(file);
+        if (fclose(file) == EOF) {
+            perror("Failed to fclose\n");
+        }
     }
 }
 
@@ -24,9 +28,15 @@ int main(void) {
         return -1;
     }
 
-    char **prog = readinput();
-
     if (fork() == 0) { // child
+        // listen to the command from parent process
+        char buf[BUFSIZ];
+        char **prog = NULL;
+        if (read(pipefd[PIPE_READ], buf, sizeof(buf)) == -1) {
+            printf("Failed to get command from parent process\n");
+        } else {
+            prog = stringToArray(buf, " \t\n");
+        }
 
         // redirect stdout
         if (dup2(pipefd[PIPE_WRITE], STDOUT_FILENO) == -1) {
@@ -42,7 +52,17 @@ int main(void) {
         cleanPtr(prog);
         exit(ret);
     } else { // parent
-        xread(pipefd[PIPE_READ]);
+        char *prog = readline(" > ");
+
+        if (write(pipefd[PIPE_WRITE], prog, sizeof(prog)) == -1) {
+            printf("Failed to send command to child process\n");
+        }
+
+        if (close(pipefd[PIPE_WRITE]) == -1) {
+            printf("failed to close PIPE_WRITE\n");
+        } else {
+            xread(&pipefd[PIPE_READ]);
+        }
     }
     return 0;
 }

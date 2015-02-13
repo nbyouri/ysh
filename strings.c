@@ -45,8 +45,3 @@ char **stringToArray(char *string, char *delims) {
 
     return array;
 }
-
-char **readinput(void) {
-    char *line = readline(" > ");
-    return stringToArray(line, " \n\t");
-}
