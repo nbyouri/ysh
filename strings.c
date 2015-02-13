@@ -11,9 +11,9 @@ char *readinput(const char *prompt) {
     fgets(line, sizeof(line), stdin);
     if (line != NULL) {
         printf("%s\n", line);
-        char *string = malloc(strlen(line) * sizeof(char *));
+        char *string = malloc((sizeof(line) + 1) * sizeof(char *));
         strncpy(string, line, BUFSIZ);
-        string[strlen(string)] = '\0';
+        string[sizeof(string) + 1] = '\0';
         return string;
     } else {
         return NULL;

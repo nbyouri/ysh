@@ -69,18 +69,13 @@ int ysh(void) {
         cleanPtr(prog);
 
         // exit with status returned from execvp
-        exit(ret);
+        _Exit(ret);
     } else if (childpid == -1) {
         perror("Failed to fork()\n");
         return EXIT_FAILURE;
     } else { // parent
         // read command as a string from user
         char *prog = readline(" > ");
-        if (strncmp(prog, EXIT, sizeof(prog) + 1) == 0) {
-            printf("exiting...\n");
-            stop = true;
-            return EXIT_SUCCESS;
-        }
 
         // send command to child process as a string
         ssize_t bytes = write(pipefd[PIPE_WRITE], prog, sizeof(prog) + 1);
@@ -95,9 +90,14 @@ int ysh(void) {
             // read command output from child process
             xread(&pipefd[PIPE_READ]);
         }
-        wait(&status);
-        //pid_t child_p = wait(&status);
-        //printf("child process = %d\n", child_p);
+        pid_t child_p = wait(&status);
+        printf("child %d finished with %d (%s)\n", child_p, status,
+                (status > 0) ? "bad" : "good");
+        if (strncmp(prog, EXIT, sizeof(prog) + 1) == 0) {
+            printf("exiting...\n");
+            stop = true;
+            return EXIT_SUCCESS;
+        }
     }
     return status;
 }
