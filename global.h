@@ -9,8 +9,6 @@
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
-#define MAX_TOKEN_CHAR 40
-#define BUF 4000
 #define arraySize(x)    sizeof(x)/sizeof(*x)
 
 void cleanPtr(char **);

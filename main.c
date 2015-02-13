@@ -1,25 +1,5 @@
 #include "global.h"
 
-void xread(int *fd) {
-    char buf[BUFSIZ];
-    FILE *file;
-    file = fdopen(*fd, "r");
-    if (file == NULL) {
-        perror("Failed to fdopen\n");
-        exit(EXIT_FAILURE);
-    } else {
-        while (!feof(file) &&
-                !ferror(file) &&
-                fgets(buf, sizeof(buf), file) != NULL) {
-            printf("%s", buf);
-        }
-        if (fclose(file) == EOF) {
-            perror("Failed to fclose\n");
-        }
-    }
-}
-
-
 int main(void) {
     int pipefd[2];
 
@@ -28,13 +8,18 @@ int main(void) {
         return -1;
     }
 
-    if (fork() == 0) { // child
+    int childpid = fork();
+    if (childpid == 0) { // child
         // listen to the command from parent process
         char buf[BUFSIZ];
         char **prog = NULL;
-        if (read(pipefd[PIPE_READ], buf, sizeof(buf)) == -1) {
+
+        // read command as a string from parent
+        ssize_t bytes = read(pipefd[PIPE_READ], buf, BUFSIZ);
+        if (bytes == -1) {
             printf("Failed to get command from parent process\n");
         } else {
+            // convert string read to array usable by execvp
             prog = stringToArray(buf, " \t\n");
         }
 
@@ -43,24 +28,37 @@ int main(void) {
             printf("Failed to dup2 stdout\n");
         }
 
+        // close reading part of pipe
         if (close(pipefd[PIPE_READ]) == -1) {
             printf("Failed to close pipefd[0]\n");
         }
 
+        // execute the command
         int ret = execvp(prog[0], prog);
 
+        // clean the array of string allocated
         cleanPtr(prog);
+
+        // exit with status returned from execvp
         exit(ret);
+    } else if (childpid == -1) {
+        perror("Failed to fork()\n");
+        return -1;
     } else { // parent
+        // read command as a string from user
         char *prog = readline(" > ");
 
-        if (write(pipefd[PIPE_WRITE], prog, sizeof(prog)) == -1) {
+        // send command to child process as a string
+        ssize_t bytes = write(pipefd[PIPE_WRITE], prog, strnlen(prog, BUFSIZ));
+        if (bytes == -1) {
             printf("Failed to send command to child process\n");
         }
 
+        // close the writing pipe
         if (close(pipefd[PIPE_WRITE]) == -1) {
             printf("failed to close PIPE_WRITE\n");
         } else {
+            // read command output from child process
             xread(&pipefd[PIPE_READ]);
         }
     }

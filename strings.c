@@ -1,5 +1,26 @@
 #include "global.h"
 
+// procedure to read lines from file descriptor
+void xread(int *fd) {
+    char buf[BUFSIZ];
+    FILE *file;
+    file = fdopen(*fd, "r");
+    if (file == NULL) {
+        perror("Failed to fdopen\n");
+        exit(EXIT_FAILURE);
+    } else {
+        while (!feof(file) &&
+                !ferror(file) &&
+                fgets(buf, sizeof(buf), file) != NULL) {
+            printf("%s", buf);
+        }
+        if (fclose(file) == EOF) {
+            perror("Failed to fclose\n");
+        }
+    }
+}
+
+// clean array of strings
 void cleanPtr(char ** array) {
     int count = arraySize(array);
 
@@ -18,6 +39,7 @@ void cleanPtr(char ** array) {
     }
 }
 
+// convert string to array of strings separated by delimiters
 char **stringToArray(char *string, char *delims) {
     char    *token;
     char    **array = NULL;
