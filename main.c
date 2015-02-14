@@ -79,7 +79,6 @@ int ysh(void) {
     } else { // parent
         // read command as a string from user
         char *prog = readinput(" > ");
-        printf("prog to send = %zu \n", strlen(prog));
 
         // send command to child process as a string
         ssize_t bytes = write(pipefd[PIPE_WRITE], prog, strlen(prog));

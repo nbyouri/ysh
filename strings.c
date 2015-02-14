@@ -103,7 +103,7 @@ char **stringToArray(char *string, char *delims) {
             } else {
                 // don't copy an empty string
                 if (strlen(token) > 0) {
-                    array[i] = token;
+                    strlcpy(array[i], token, sizeof(array[i]));
                     i++;
                 }
             }
@@ -114,7 +114,7 @@ char **stringToArray(char *string, char *delims) {
     array[i] = NULL;
 
     // debug array content
-    dump(array, i);
+    //dump(array, i);
 
     return array;
 }
