@@ -1,17 +1,15 @@
 #include "global.h"
 
 // read string from user
-// XXX: sanitize
-// XXX: broken
 char *readinput(const char *prompt) {
     char line[BUFSIZ];
+
     printf("%s", prompt);
+
     fgets(line, sizeof(line), stdin);
     if (line != NULL) {
-        printf("%s\n", line);
-        char *string = malloc((sizeof(line) + 1) * sizeof(char *));
-        strncpy(string, line, BUFSIZ);
-        string[sizeof(string) + 1] = '\0';
+        char *string = malloc(BUFSIZ * sizeof(char *));
+        strlcpy(string, line, strlen(line));
         return string;
     } else {
         return NULL;
@@ -88,9 +86,6 @@ char **stringToArray(char *string, char *delims) {
     char    **array = NULL;
     unsigned int    i = 0;
 
-    // nul terminate the string first
-    string[sizeof(string)] = '\0';
-
     // separate the string into tokens based on the delimiters
     // and store these tokens in an array.
     while ((token = strsep(&string, delims)) != NULL) {
@@ -108,7 +103,7 @@ char **stringToArray(char *string, char *delims) {
             } else {
                 // don't copy an empty string
                 if (strlen(token) > 0) {
-                    strlcpy(array[i], token, sizeof(token));
+                    array[i] = token;
                     i++;
                 }
             }
@@ -119,7 +114,7 @@ char **stringToArray(char *string, char *delims) {
     array[i] = NULL;
 
     // debug array content
-    //dump(array, i);
+    dump(array, i);
 
     return array;
 }
@@ -137,7 +132,9 @@ void dump(char **ptr, size_t size) {
     }
 
     printf("args[%zu] = {\n", size + 1);
-    for (int i = 0; i <= size; i++) {
+
+    unsigned int i = 0;
+    for (i = 0; i <= size; i++) {
         printf("\t");
         if (ptr[i] == NULL) {
             printf("NULL,\n");

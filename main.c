@@ -50,7 +50,9 @@ int ysh(void) {
             printf("Failed to get command from parent process\n");
         } else {
             // convert string read to array usable by execvp
-            prog = stringToArray(buf, " \t\n");
+            // but first trim it to the number of bytes read.
+            buf[bytes] = '\0';
+            prog = stringToArray(buf, " ");
         }
 
         // redirect stdout
@@ -76,7 +78,8 @@ int ysh(void) {
         return EXIT_FAILURE;
     } else { // parent
         // read command as a string from user
-        char *prog = readline(" > ");
+        char *prog = readinput(" > ");
+        printf("prog to send = %zu \n", strlen(prog));
 
         // send command to child process as a string
         ssize_t bytes = write(pipefd[PIPE_WRITE], prog, strlen(prog));
@@ -94,10 +97,15 @@ int ysh(void) {
         pid_t child_p = wait(&status);
         printf("child %d finished with %d (%s)\n", child_p, status,
                 (status > 0) ? "bad" : "good");
-        if (strncmp(prog, EXIT, sizeof(prog) + 1) == 0) {
+        if (strcmp(prog, EXIT) == 0) {
             printf("exiting...\n");
             stop = true;
             return EXIT_SUCCESS;
+        }
+
+        if (prog != NULL) {
+            free(prog);
+            prog = NULL;
         }
     }
     return status;

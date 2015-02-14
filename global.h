@@ -7,7 +7,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
-#include <readline/readline.h>
 
 #define EXIT "exit"
 #define PIPE_READ 0
