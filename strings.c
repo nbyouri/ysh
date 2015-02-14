@@ -8,6 +8,9 @@ char *readinput(const char *prompt) {
 
     fgets(line, sizeof(line), stdin);
     if (line != NULL) {
+        if (line[0] == '\n') {
+            return NULL;
+        }
         char *string = malloc(BUFSIZ * sizeof(char *));
         strlcpy(string, line, strlen(line));
         return string;

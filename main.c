@@ -53,6 +53,9 @@ int ysh(void) {
             // but first trim it to the number of bytes read.
             buf[bytes] = '\0';
             prog = stringToArray(buf, " ");
+            if (prog == NULL) {
+                printf("Failed to get command.\n");
+            }
         }
 
         // redirect stdout
@@ -79,6 +82,10 @@ int ysh(void) {
     } else { // parent
         // read command as a string from user
         char *prog = readinput(" > ");
+
+        if (prog == NULL) {
+            return EXIT_FAILURE;
+        }
 
         // send command to child process as a string
         ssize_t bytes = write(pipefd[PIPE_WRITE], prog, strlen(prog));
