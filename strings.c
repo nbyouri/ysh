@@ -40,6 +40,7 @@ void ReadFD(int *fd) {
 }
 
 // grow array of one element of given size
+// copy of xrealloc from openssh
 void *growArray(void *ptr, size_t nelem, size_t size) {
     void *tempPtr;
     size_t totalSize = nelem * size;

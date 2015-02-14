@@ -83,6 +83,10 @@ int ysh(void) {
         // read command as a string from user
         char *prog = readinput(" > ");
 
+        if (strncmp(prog, "<3", 3) == 0) {
+            printf("love marniiine\n");
+        }
+
         if (prog == NULL) {
             return EXIT_FAILURE;
         }
@@ -100,19 +104,18 @@ int ysh(void) {
             // read command output from child process
             ReadFD(&pipefd[PIPE_READ]);
         }
+        // wait for child process and get it's pid
         pid_t child_p = wait(&status);
         printf("child %d finished with %d (%s)\n", child_p, status,
                 (status > 0) ? "bad" : "good");
+        // if the command is "exit" then leave
         if (strcmp(prog, EXIT) == 0) {
             printf("exiting...\n");
             stop = true;
             return EXIT_SUCCESS;
         }
 
-        if (prog != NULL) {
-            free(prog);
-            prog = NULL;
-        }
+        cleanPtr((char**)prog);
     }
     return status;
 }
