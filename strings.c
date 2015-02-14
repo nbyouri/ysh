@@ -45,7 +45,7 @@ void *growArray(void *ptr, size_t nelem, size_t size) {
         printf("Trying to allocate 0\n");
         return NULL;
     }
-    if (SIZE_MAX / nelem < size) {
+    if (SIZE_T_MAX / nelem < size) {
         printf("Trying to allocate too much\n");
         return NULL;
     }
