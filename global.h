@@ -19,5 +19,6 @@ extern bool stop;
 void cleanPtr(char **);
 char **stringToArray(char *, char *);
 char *readinput(const char *);
-void xread(int *);
+void ReadFD(int *);
 int ysh(void);
+void *growArray(void *, size_t, size_t);

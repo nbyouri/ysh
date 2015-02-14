@@ -19,7 +19,7 @@ char *readinput(const char *prompt) {
 }
 
 // procedure to read lines from file descriptor
-void xread(int *fd) {
+void ReadFD(int *fd) {
     char buf[BUFSIZ];
     FILE *file;
     file = fdopen(*fd, "r");
@@ -36,6 +36,31 @@ void xread(int *fd) {
             perror("Failed to fclose\n");
         }
     }
+}
+
+// grow array of one element of given size
+void *growArray(void *ptr, size_t nelem, size_t size) {
+    void *tempPtr;
+    size_t totalSize = nelem * size;
+
+    if (totalSize == 0) {
+        printf("Trying to allocate 0\n");
+        return NULL;
+    }
+    if (SIZE_MAX / nelem < size) {
+        printf("Trying to allocate too much\n");
+        return NULL;
+    }
+    if (ptr == NULL) {
+        tempPtr = malloc(totalSize);
+    } else {
+        tempPtr = realloc(ptr, totalSize);
+    }
+    if (tempPtr == NULL) {
+        printf("Failed to reallocate %zu bytes.\n", totalSize);
+    }
+
+    return tempPtr;
 }
 
 // clean array of strings
@@ -64,7 +89,7 @@ char **stringToArray(char *string, char *delims) {
     unsigned int    i = 0;
 
     while ((token = strsep(&string, delims)) != NULL) {
-        array = realloc(array, i + 1);
+        array = growArray(array, i + 1, sizeof(char *));
         if (array == NULL) {
             printf("Failed to reallocate array at index %d\n", i);
             return NULL;

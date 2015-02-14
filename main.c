@@ -89,7 +89,7 @@ int ysh(void) {
             printf("failed to close PIPE_WRITE\n");
         } else {
             // read command output from child process
-            xread(&pipefd[PIPE_READ]);
+            ReadFD(&pipefd[PIPE_READ]);
         }
         pid_t child_p = wait(&status);
         printf("child %d finished with %d (%s)\n", child_p, status,
