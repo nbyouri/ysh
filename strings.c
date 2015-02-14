@@ -88,19 +88,29 @@ char **stringToArray(char *string, char *delims) {
     char    **array = NULL;
     unsigned int    i = 0;
 
+    // nul terminate the string first
+    string[sizeof(string)] = '\0';
+
+    // separate the string into tokens based on the delimiters
+    // and store these tokens in an array.
     while ((token = strsep(&string, delims)) != NULL) {
+        // grow array at index + 1
         array = growArray(array, i + 1, sizeof(char *));
         if (array == NULL) {
             printf("Failed to reallocate array at index %d\n", i);
             return NULL;
         } else {
-            array[i] = malloc(sizeof(char *));
+            // allocate string in array
+            array[i] = malloc(BUFSIZ * sizeof(char));
             if (array[i] == NULL) {
                 printf("Failed to malloc\n");
                 return NULL;
             } else {
-                array[i] = token;
-                i++;
+                // don't copy an empty string
+                if (strlen(token) > 0) {
+                    strlcpy(array[i], token, sizeof(token));
+                    i++;
+                }
             }
         }
     }
@@ -108,5 +118,32 @@ char **stringToArray(char *string, char *delims) {
     // make sure the array of string end with NULL
     array[i] = NULL;
 
+    // debug array content
+    //dump(array, i);
+
     return array;
+}
+
+// dumps the content of a string array with given size
+void dump(char **ptr, size_t size) {
+    if (ptr == NULL) {
+        printf("Can't dump NULL pointer\n");
+        return;
+    }
+
+    if (size == 0) {
+        printf("Can't dump array of no elements\n");
+        return;
+    }
+
+    printf("args[%zu] = {\n", size + 1);
+    for (int i = 0; i <= size; i++) {
+        printf("\t");
+        if (ptr[i] == NULL) {
+            printf("NULL,\n");
+        } else {
+            printf("%s, // (%zu)\n", ptr[i], strlen(ptr[i]));
+        }
+    }
+    printf("};\n");
 }

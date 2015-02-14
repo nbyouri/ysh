@@ -22,3 +22,4 @@ char *readinput(const char *);
 void ReadFD(int *);
 int ysh(void);
 void *growArray(void *, size_t, size_t);
+void dump(char **, size_t);
