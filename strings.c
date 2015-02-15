@@ -11,7 +11,7 @@ char *readinput(const char *prompt) {
         if (line[0] == '\n') {
             return NULL;
         }
-        char *string = malloc(BUFSIZ * sizeof(char *));
+        char *string = malloc(BUFSIZ);
         strlcpy(string, line, strlen(line));
         return string;
     } else {
@@ -96,7 +96,8 @@ char **stringToArray(char *string, char *delims) {
         // grow array at index + 1
         array = growArray(array, i + 1, sizeof(char *));
         if (array == NULL) {
-            printf("Failed to reallocate array at index %d\n", i);
+            printf("Failed to reallocate array at index %u\n", i);
+            cleanPtr(array);
             return NULL;
         } else {
             // allocate string in array
@@ -107,7 +108,8 @@ char **stringToArray(char *string, char *delims) {
             } else {
                 // don't copy an empty string
                 if (strlen(token) > 0) {
-                    strlcpy(array[i], token, sizeof(array[i]));
+                    // copy as much as the size we've allocated
+                    strlcpy(array[i], token, BUFSIZ);
                     i++;
                 }
             }

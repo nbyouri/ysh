@@ -83,10 +83,6 @@ int ysh(void) {
         // read command as a string from user
         char *prog = readinput(" > ");
 
-        if (strncmp(prog, "<3", 3) == 0) {
-            printf("love marniiine\n");
-        }
-
         if (prog == NULL) {
             return EXIT_FAILURE;
         }
