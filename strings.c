@@ -8,11 +8,15 @@ char *readinput(const char *prompt) {
 
     fgets(line, sizeof(line), stdin);
     if (line != NULL) {
+        // don't do anything if user just presses return
         if (line[0] == '\n') {
             return NULL;
         }
+        // shave off the \n at the end
+        line[strlen(line) - 1] = '\0';
+        // copy the string safely
         char *string = malloc(BUFSIZ);
-        strlcpy(string, line, strlen(line));
+        strlcpy(string, line, BUFSIZ);
         return string;
     } else {
         return NULL;
@@ -101,7 +105,7 @@ char **stringToArray(char *string, char *delims) {
             return NULL;
         } else {
             // allocate string in array
-            array[i] = malloc(BUFSIZ * sizeof(char));
+            array[i] = malloc(BUFSIZ);
             if (array[i] == NULL) {
                 printf("Failed to malloc\n");
                 return NULL;
@@ -120,7 +124,7 @@ char **stringToArray(char *string, char *delims) {
     array[i] = NULL;
 
     // debug array content
-    //dump(array, i);
+    dump(array, i);
 
     return array;
 }
