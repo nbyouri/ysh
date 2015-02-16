@@ -71,8 +71,8 @@ int ysh(void) {
         // execute the command
         ret = execvp(prog[0], prog);
 
-        // clean the array of string allocated
-        cleanPtr(prog);
+        // no need to free anything, execvp wipes
+        // the address space.
 
         // exit with status returned from execvp
         _Exit(ret);
@@ -111,7 +111,8 @@ int ysh(void) {
             return EXIT_SUCCESS;
         }
 
-        cleanPtr((char**)prog);
+        size_t len = 0;
+        prog = cleanPtr((char **)prog, &len);
     }
     return status;
 }

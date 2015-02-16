@@ -16,7 +16,7 @@
 
 extern bool stop;
 
-void cleanPtr(char **);
+void *cleanPtr(char **, size_t *);
 char **stringToArray(char *, char *);
 char *readinput(const char *);
 void ReadFD(int *);

@@ -75,21 +75,29 @@ void *growArray(void *ptr, size_t nelem, size_t size) {
 // clean array of strings
 // can be used with char * as well,
 // just cast it. ex. cleanPtr((char **)str);
-void cleanPtr(char ** array) {
-    int count = arraySize(array);
-
-    if (count > 1) {
-        for (int i = 0; i < count; i++) {
-            if (array[i] != NULL) {
-                free(array[i]);
-                array[i] = NULL;
+void *cleanPtr(char **ptr, size_t *count) {
+    // 2D Array
+    if (*count > 0) {
+        unsigned int i;
+        for (i = 0; i < *count; i++) {
+            if (ptr[i] != NULL) {
+                free(ptr[i]);
+                ptr[i] = NULL;
             }
         }
-    }
-
-    if (array != NULL) {
-        free(array);
-        array = NULL;
+        if (ptr != NULL) {
+            free(ptr);
+            ptr = NULL;
+            *count = 0;
+        }
+        return ptr;
+        // 1D array
+    } else {
+        if (ptr != NULL) {
+            free(ptr);
+            ptr = NULL;
+        }
+        return ptr;
     }
 }
 
@@ -107,13 +115,16 @@ char **stringToArray(char *string, char *delims) {
         array = growArray(array, i + 1, sizeof(char *));
         if (array == NULL) {
             printf("Failed to reallocate array at index %u\n", i);
-            cleanPtr(array);
+            size_t len = arraySize(array);
+            array = cleanPtr(array, &len);
             return NULL;
         } else {
             // allocate string in array
             array[i] = growArray(array[i], BUFSIZ, sizeof(char));
             if (array[i] == NULL) {
-                printf("Failed to malloc\n");
+                printf("Failed to malloc array[%u]\n", i);
+                size_t len = arraySize(array);
+                array = cleanPtr(array, &len);
                 return NULL;
             } else {
                 // don't copy an empty string
@@ -154,7 +165,7 @@ void dumpArray(char **ptr, size_t size) {
         } else {
             size_t strSize = strlen((char *)ptr);
             if (strSize > 0) {
-                printf("args[%zu] = {\n", strSize);
+                printf("%s[%zu] = {\n", (char *)ptr, strSize);
                 for (i = 0; i < strSize; i++) {
                     printf("\t%c, // (id. %u)\n", *((char *)ptr + i), i);
                 }
