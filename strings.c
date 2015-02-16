@@ -15,7 +15,8 @@ char *readinput(const char *prompt) {
         // shave off the \n at the end
         line[strlen(line) - 1] = '\0';
         // copy the string safely
-        char *string = malloc(BUFSIZ);
+        char *string = NULL;
+        string = growArray(string, BUFSIZ, sizeof(char));
         strlcpy(string, line, BUFSIZ);
         return string;
     } else {
@@ -57,7 +58,9 @@ void *growArray(void *ptr, size_t nelem, size_t size) {
         printf("Trying to allocate too much\n");
         return NULL;
     }
-    if (ptr == NULL) {
+    // if the pointer is NULL or if we're trying
+    // to grow a simple string, malloc first.
+    if ((ptr == NULL) || (size == sizeof(char))) {
         tempPtr = malloc(totalSize);
     } else {
         tempPtr = realloc(ptr, totalSize);
@@ -70,6 +73,8 @@ void *growArray(void *ptr, size_t nelem, size_t size) {
 }
 
 // clean array of strings
+// can be used with char * as well,
+// just cast it. ex. cleanPtr((char **)str);
 void cleanPtr(char ** array) {
     int count = arraySize(array);
 
@@ -95,7 +100,8 @@ char **stringToArray(char *string, char *delims) {
     unsigned int    i = 0;
 
     // separate the string into tokens based on the delimiters
-    // and store these tokens in an array.
+    // and store these tokens in an array. token is set to NULL
+    // when strsep is done.
     while ((token = strsep(&string, delims)) != NULL) {
         // grow array at index + 1
         array = growArray(array, i + 1, sizeof(char *));
@@ -105,7 +111,7 @@ char **stringToArray(char *string, char *delims) {
             return NULL;
         } else {
             // allocate string in array
-            array[i] = malloc(BUFSIZ);
+            array[i] = growArray(array[i], BUFSIZ, sizeof(char));
             if (array[i] == NULL) {
                 printf("Failed to malloc\n");
                 return NULL;
@@ -124,26 +130,44 @@ char **stringToArray(char *string, char *delims) {
     array[i] = NULL;
 
     // debug array content
-    dump(array, i);
+    //dumpArray(array, i);
 
     return array;
 }
 
 // dumps the content of a string array with given size
-void dump(char **ptr, size_t size) {
+// should work with char * with casting to char ** and
+// setting the size to 0.
+// char **ptr needs to be terminated by NULL.
+void dumpArray(char **ptr, size_t size) {
     if (ptr == NULL) {
         printf("Can't dump NULL pointer\n");
         return;
     }
 
+    unsigned int i = 0;
+
+    // deal with arrays of characters
     if (size == 0) {
-        printf("Can't dump array of no elements\n");
+        if (*ptr == NULL) {
+            printf("NULL string.\n");
+        } else {
+            size_t strSize = strlen((char *)ptr);
+            if (strSize > 0) {
+                printf("args[%zu] = {\n", strSize);
+                for (i = 0; i < strSize; i++) {
+                    printf("\t%c, // (id. %u)\n", *((char *)ptr + i), i);
+                }
+            }
+        }
+        printf("};\n");
         return;
     }
 
+    // deal with arrays of arrays of characters
     printf("args[%zu] = {\n", size + 1);
 
-    unsigned int i = 0;
+    // loop through array elements
     for (i = 0; i <= size; i++) {
         printf("\t");
         if (ptr[i] == NULL) {
