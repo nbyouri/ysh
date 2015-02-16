@@ -76,7 +76,6 @@ void *growArray(void *ptr, size_t nelem, size_t size) {
 // can be used with char * as well,
 // just cast it. ex. cleanPtr((char **)str);
 void *cleanPtr(char **ptr, size_t *count) {
-    // 2D Array
     if (*count > 0) {
         unsigned int i;
         for (i = 0; i < *count; i++) {
@@ -85,20 +84,13 @@ void *cleanPtr(char **ptr, size_t *count) {
                 ptr[i] = NULL;
             }
         }
-        if (ptr != NULL) {
-            free(ptr);
-            ptr = NULL;
-            *count = 0;
-        }
-        return ptr;
-        // 1D array
-    } else {
-        if (ptr != NULL) {
-            free(ptr);
-            ptr = NULL;
-        }
-        return ptr;
     }
+    if (ptr != NULL) {
+        free(ptr);
+        ptr = NULL;
+        *count = 0;
+    }
+    return ptr;
 }
 
 // convert string to array of strings separated by delimiters
@@ -169,6 +161,8 @@ void dumpArray(char **ptr, size_t size) {
                 for (i = 0; i < strSize; i++) {
                     printf("\t%c, // (id. %u)\n", *((char *)ptr + i), i);
                 }
+            } else {
+                printf("Can't dump empty array\n");
             }
         }
         printf("};\n");
