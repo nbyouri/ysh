@@ -74,9 +74,9 @@ void *growArray(void *ptr, size_t nelem, size_t size) {
 
 // clean array of strings
 // can be used with char * as well,
-// just cast it. ex. cleanPtr((char **)str);
-void *cleanPtr(char **ptr, size_t *count) {
-    if (*count > 0) {
+// just cast it. ex. cleanPtr((char **)str, NULL)
+void *cleanPtr(char **ptr, unsigned int *count) {
+    if ((count != NULL) && (*count > 0)) {
         unsigned int i;
         for (i = 0; i < *count; i++) {
             if (ptr[i] != NULL) {
@@ -84,11 +84,11 @@ void *cleanPtr(char **ptr, size_t *count) {
                 ptr[i] = NULL;
             }
         }
+        *count = 0;
     }
     if (ptr != NULL) {
         free(ptr);
         ptr = NULL;
-        *count = 0;
     }
     return ptr;
 }
@@ -107,16 +107,14 @@ char **stringToArray(char *string, char *delims) {
         array = growArray(array, i + 1, sizeof(char *));
         if (array == NULL) {
             printf("Failed to reallocate array at index %u\n", i);
-            size_t len = arraySize(array);
-            array = cleanPtr(array, &len);
+            array = cleanPtr(array, &i);
             return NULL;
         } else {
             // allocate string in array
             array[i] = growArray(array[i], BUFSIZ, sizeof(char));
             if (array[i] == NULL) {
                 printf("Failed to malloc array[%u]\n", i);
-                size_t len = arraySize(array);
-                array = cleanPtr(array, &len);
+                array = cleanPtr(array, &i);
                 return NULL;
             } else {
                 // don't copy an empty string

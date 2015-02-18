@@ -111,8 +111,7 @@ int ysh(void) {
             return EXIT_SUCCESS;
         }
 
-        size_t len = 0;
-        prog = cleanPtr((char **)prog, &len);
+        prog = cleanPtr((char **)prog, NULL);
     }
     return status;
 }

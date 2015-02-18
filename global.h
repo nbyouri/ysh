@@ -12,11 +12,10 @@
 #define EXIT "exit"
 #define PIPE_READ 0
 #define PIPE_WRITE 1
-#define arraySize(x)    sizeof(x)/sizeof(*x)
 
 extern bool stop;
 
-void *cleanPtr(char **, size_t *);
+void *cleanPtr(char **, unsigned int *);
 char **stringToArray(char *, char *);
 char *readinput(const char *);
 void ReadFD(int *);
