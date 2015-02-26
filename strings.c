@@ -130,7 +130,7 @@ char **stringToArray(char *string, char *delims) {
 	array[i] = NULL;
 
 	// debug array content
-	//dumpArray(array, i);
+	dumpArray(array, i);
 
 	return array;
 }
@@ -138,7 +138,6 @@ char **stringToArray(char *string, char *delims) {
 // dumps the content of a string array with given size
 // should work with char * with casting to char ** and
 // setting the size to 0.
-// char **ptr needs to be terminated by NULL.
 void dumpArray(char **ptr, size_t size) {
 	if (ptr == NULL) {
 		printf("Can't dump NULL pointer\n");
