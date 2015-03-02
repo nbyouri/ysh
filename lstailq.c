@@ -29,22 +29,21 @@ ssize_t setName(char *, struct entry *);
 size_t getSize(void);
 int cmpName(struct entry *, struct entry *);
 void swapNext(struct entry *);
-unsigned int toArray(char ***);
-void cleanDaPtr(char **, unsigned int *);
+void *toArray(char **);
+void cleanDaPtr(char **);
 
-unsigned int toArray(char ***array) {
-	*array = NULL;
+void *toArray(char **array) {
 	unsigned int i = 0;
-	*array = growArray(*array, getSize(), sizeof(char *));
-	if (*array == NULL) {
+	array = growArray(array, getSize(), sizeof(char *));
+	if (array == NULL) {
 		perror("*array == NULL");
 	}
 	TAILQ_FOREACH(np, &head, entries) {
-		(*array)[i] = malloc(BUFSIZ);
-		strlcpy((*array)[i], np->name, BUFSIZ);
+		array[i] = malloc(BUFSIZ);
+		strlcpy(array[i], np->name, BUFSIZ);
 		i++;
 	}
-	return i;
+	return array;
 }
 
 char *toString(struct entry *en) {
@@ -179,7 +178,7 @@ int main(void) {
 	struct entry *item = get(5);
 	printf("5 > %s\n", toString(item));
 	printf("%s\n", "renaming entry 5 name to \"remy\"");
-	if (setName("remy", item) == -1) {
+	if (setName("arst", item) == -1) {
 		perror("Failed to set name\n");
 	} else {
 		printf("prev > %s\n", toString(getPrev(item)));
@@ -188,9 +187,10 @@ int main(void) {
 	}
 
 
-	// convert linkedlist to static array
-	char **array;
-	unsigned int count = toArray(&array);
+	// convert linkedlist to array
+	char **array = NULL;
+	array = toArray(array);
+	unsigned int count = (unsigned int)getSize();
 	dumpArray(array, count);
 	cleanPtr(array, &count);
 
