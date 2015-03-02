@@ -79,19 +79,13 @@ void *cleanPtr(char **ptr, unsigned int *count) {
 	if ((count != NULL) && (*count > 0)) {
 		unsigned int i;
 		for (i = 0; i < *count; i++) {
-			if (ptr[i] != NULL) {
-				printf("freeing ptr[%u] = %p\n", i, ptr[i]);
-				free(ptr[i]);
-				ptr[i] = NULL;
-			}
+			free(ptr[i]);
+			ptr[i] = NULL;
 		}
 		*count = 0;
 	}
-	if (ptr != NULL) {
-		printf("freeing ptr = %p\n", ptr);
-		free(ptr);
-		ptr = NULL;
-	}
+	free(ptr);
+	ptr = NULL;
 	return ptr;
 }
 

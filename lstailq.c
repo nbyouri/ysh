@@ -41,7 +41,7 @@ unsigned int toArray(char ***array) {
 	}
 	TAILQ_FOREACH(np, &head, entries) {
 		(*array)[i] = malloc(BUFSIZ);
-		(*array)[i] = np->name;
+		strlcpy((*array)[i], np->name, BUFSIZ);
 		i++;
 	}
 	return i;
@@ -85,9 +85,8 @@ ssize_t setName(char *name, struct entry *en) {
 	}
 	if (strnlen(name, BUFSIZ) > 0) {
 		return (ssize_t)strlcpy(en->name, name, BUFSIZ);
-	} else {
-		return -1;
 	}
+	return -1;
 }
 
 size_t getSize(void) {
@@ -190,13 +189,8 @@ int main(void) {
 
 
 	// convert linkedlist to static array
-	//char **array = NULL;
-	//for (int i = 0; i < 61; i++) {
-	//	memset(&array[i], 0, sizeof(array));
-	//	printf("%u > nulling array[%u]\n", i, i);
-	//}
 	char **array;
-	unsigned count = toArray(&array);
+	unsigned int count = toArray(&array);
 	dumpArray(array, count);
 	cleanPtr(array, &count);
 
@@ -217,10 +211,8 @@ int main(void) {
 	// free allocated memory for each entry
 	// and remove them.
 	TAILQ_FOREACH(np, &head, entries) {
-		if (np->name != NULL) {
-			free(np->name);
-			np->name = NULL;
-		}
+		free(np->name);
+		np->name = NULL;
 		TAILQ_REMOVE(&head, np, entries);
 	}
 
@@ -230,15 +222,11 @@ int main(void) {
 	}
 
 	// free entry pointers
-	if (el0 != NULL) {
-		free(el0);
-		el0 = NULL;
-	}
+	free(el0);
+	el0 = NULL;
 
-	if (np != NULL) {
-		free(np);
-		np = NULL;
-	}
+	free(np);
+	np = NULL;
 
 	return EXIT_SUCCESS;
 }
