@@ -3,6 +3,10 @@
 bool stop;
 
 int main(int argc, char **argv) {
+
+	signal(SIGINT, &sigintHandler);
+	signal(SIGKILL, &handleExit);
+
 	// no arguments allowed
 	if (argc >= 2) {
 		printf("%s : This program takes no arguments,"
@@ -107,12 +111,21 @@ int ysh(void) {
 		    (status > 0) ? "bad" : "good");
 		// if the command is "exit" then leave
 		if (strcmp(prog, EXIT) == 0) {
-			printf("exiting...\n");
-			stop = true;
-			return EXIT_SUCCESS;
+			handleExit(status);
 		}
 
 		prog = cleanPtr((char **)prog, NULL);
 	}
 	return status;
+}
+
+void handleExit(int state) {
+	// do some cleanup
+	printf("exiting...\n");
+	exit(EXIT_SUCCESS);
+
+}
+
+void sigintHandler(int state) {
+	return;
 }

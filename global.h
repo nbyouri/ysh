@@ -22,3 +22,5 @@ void ReadFD(int *);
 int ysh(void);
 void *growArray(void *, size_t, size_t);
 void dumpArray(char **, size_t);
+void handleExit(int);
+void sigintHandler(int);
