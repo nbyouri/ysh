@@ -10,8 +10,10 @@
 
 /*
  * TOOD: - add concat
+ *	 - simplify head/init with macros
  *	 - cleanup
  *	 - man page
+ *	 - warn about not using get() twice in parameters
  *	 - ...
  */
 // don't bother with arguments
@@ -49,6 +51,7 @@ unsigned int getId(struct entry *);
 size_t getSize(void);
 int cmpName(struct entry *, struct entry *);
 int cmpId(struct entry *, struct entry *);
+void swap(struct entry *, struct entry *);
 void swapPrev(struct entry *);
 void swapNext(struct entry *);
 void *toArray(char **);
@@ -185,6 +188,32 @@ int cmpName(struct entry *base, struct entry *next) {
 	return (strcmp(base->name, next->name));
 }
 
+// XXX bug: entries between first and second are lost
+void swap(struct entry *first, struct entry *second) {
+	assert(first != NULL && second != NULL);
+	if (first != second) {
+		struct entry **tqe_prev = first->entries.tqe_prev;
+		*tqe_prev = second;
+
+		second->entries.tqe_prev = first->entries.tqe_prev;
+
+		first->entries.tqe_prev = &(second->entries.tqe_next);
+
+		first->entries.tqe_next = second->entries.tqe_next;
+
+		if (second->entries.tqe_next) {
+			struct entry *tqe_next = second->entries.tqe_next;
+			tqe_next->entries.tqe_prev = &(first->entries.tqe_next);
+		}
+
+		second->entries.tqe_next = first;
+
+		if (head.tqh_last == &(second->entries.tqe_next)) {
+			head.tqh_last = &(first->entries.tqe_next);
+		}
+	}
+}
+
 void swapNext(struct entry *base) {
 	assert(base != NULL);
 	struct entry *next = getNext(base);
@@ -216,6 +245,7 @@ int main(void) {
 	struct dirent       *ep;
 
 	// get the size of one file name, platform dependant
+	unsigned int id = 0;
 	size_t namelen = sizeof(ep->d_name);
 
 	// initialize list
@@ -234,7 +264,8 @@ int main(void) {
 				    sizeof(char));
 				// copy the string in our item
 				strlcpy(el0->name, ep->d_name, namelen);
-				el0->id = arc4random() % 100;
+				//el0->id = arc4random() % 100;
+				el0->id = id++;
 				// insert the entry in the list
 				add(el0);
 			}
@@ -251,6 +282,9 @@ int main(void) {
 	swapNext(get(59));
 	swapPrev(get(59));
 #endif
+	struct entry *first = get(2);
+	struct entry *second = get(40);
+	swap(first, second);
 
 	// insert before / after
 #if 0
