@@ -149,13 +149,11 @@ char *getName(struct entry *en) {
 
 unsigned int getId(struct entry *en) {
 	assert(en != NULL);
-	return en != NULL ? 0 : en->id;
+	return en->id;
 }
 
 int cmpId(struct entry *en1, struct entry *en2) {
-	if (en1 == NULL || en2 == NULL) {
-		return 0;
-	}
+	assert(en1 != NULL && en2 != NULL);
 	return (en2->id - en1->id);
 }
 
