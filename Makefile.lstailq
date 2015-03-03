@@ -1,0 +1,2 @@
+all:
+	cc -Weverything -Wno-padded lstailq.c 
