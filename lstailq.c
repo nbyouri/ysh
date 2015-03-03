@@ -30,7 +30,7 @@ size_t getSize(void);
 int cmpName(struct entry *, struct entry *);
 void swapNext(struct entry *);
 void *toArray(char **);
-void cleanDaPtr(char **);
+bool isEmpty(void);
 
 void *toArray(char **array) {
 	unsigned int i = 0;
@@ -96,16 +96,25 @@ size_t getSize(void) {
 	return size;
 }
 
+bool isEmpty(void) {
+	return TAILQ_EMPTY(&head);
+}
+
 int cmpName(struct entry *base, struct entry *next) {
 	return (strcmp(base->name, next->name));
 }
 
 void swapNext(struct entry *base) {
-	struct entry *next = TAILQ_NEXT(base, entries);
+	struct entry *next = getNext(base);
+	struct entry *temp = base;
 	// place the first after the next
-	TAILQ_INSERT_AFTER(&head, next, base, entries);
-	// remove the first
+	if (next == NULL) {
+		printf("trying to swap last element.\n");
+		return;
+	}
+	// remove the base entry and insert
 	TAILQ_REMOVE(&head, base, entries);
+	TAILQ_INSERT_AFTER(&head, next, temp, entries);
 }
 
 int main(void) {
@@ -152,16 +161,22 @@ int main(void) {
 				}
 			}
 		}
+		id--; // shave off extra
 		if (closedir(dp) == -1) {
 			perror("Failed to close dir pointer");
 			return -1;
 		}
 	}
 
-	// swap last and last - 1 elements
+	// swap last - 1 and last - 2 elements
+#if 0
+	swapNext(get(60));
+	swapNext(get(59));
+#endif
+
 	// print traversal
 	TAILQ_FOREACH(np, &head, entries) {
-		struct entry *next = TAILQ_NEXT(np, entries);
+		struct entry *next = getNext(np);
 		size_t nextsize = 0;
 		size_t size = strlen(np->name);
 		if (next != NULL) {
@@ -175,24 +190,24 @@ int main(void) {
 	}
 
 	// get an entry like an array
+#if 0
 	struct entry *item = get(5);
 	printf("5 > %s\n", toString(item));
-	printf("%s\n", "renaming entry 5 name to \"remy\"");
+	printf("%s\n", "renaming entry 5 name to \"arst\"");
 	if (setName("arst", item) == -1) {
 		perror("Failed to set name\n");
 	} else {
-		printf("prev > %s\n", toString(getPrev(item)));
 		printf("%s\n", toString(item));
-		printf("next > %s\n", toString(getNext(item)));
 	}
+#endif
 
 
 	// convert linkedlist to array
-	char **array = NULL;
-	array = toArray(array);
-	unsigned int count = (unsigned int)getSize();
-	dumpArray(array, count);
-	cleanPtr(array, &count);
+	/*char **array = NULL;
+	  array = toArray(array);
+	  unsigned int count = (unsigned int)getSize();
+	  dumpArray(array, count);
+	  cleanPtr(array, &count);*/
 
 	// bubble sort
 #if 0
@@ -217,8 +232,8 @@ int main(void) {
 	}
 
 	// should be empty by now, still check
-	if (!TAILQ_EMPTY(&head)) {
-		perror("empty\n");
+	if (!isEmpty()) {
+		perror("ll not empty\n");
 	}
 
 	// free entry pointers
