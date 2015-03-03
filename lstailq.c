@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <sys/queue.h>
+#include "queue.h"
 #include <string.h>
 #include "strings.c"
 
@@ -25,6 +25,7 @@ static struct entry {
 	TAILQ_ENTRY(entry) entries;
 } *el0, *np;
 
+// tail queue head
 static TAILQ_HEAD(tailhead, entry) head = TAILQ_HEAD_INITIALIZER(head);
 
 // Traverse the tail queue in forward direction
