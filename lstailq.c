@@ -18,6 +18,9 @@
  */
 // don't bother with arguments
 #define PATH "/Users/youri/Downloads"
+#define RED "\033[22;32m"
+#define NOR "\033[00;0m"
+
 
 // entry
 static struct entry {
@@ -25,14 +28,14 @@ static struct entry {
 	char *name;
 	/* pointer to previous and next entries in the tail queue */
 	TAILQ_ENTRY(entry) entries;
-} *el0, *np;
+} *np;
 
 // tail queue head
 static TAILQ_HEAD(tailhead, entry) head = TAILQ_HEAD_INITIALIZER(head);
 
 // Traverse the tail queue in forward direction
 #define foreach(x)	TAILQ_FOREACH(x, &head, entries)
-#define foreach_rev(x)	TAILQ_FOREACH_REVERSE(x, &head, tailhead, entries)
+//#define foreach_rev(x)	TAILQ_FOREACH_REVERSE(x, &head, tailhead, entries)
 
 char *toString(struct entry *);
 void add(struct entry *);
@@ -40,11 +43,15 @@ void addBefore(struct entry *, struct entry *);
 void addAfter(struct entry *, struct entry *);
 void addOnTop(struct entry *);
 void rm(struct entry *);
+struct entry *new(unsigned int id, char *name);
 struct entry *get(unsigned int);
 struct entry *getFirst(void);
 struct entry *getLast(void);
 struct entry *getPrev(struct entry *);
 struct entry *getNext(struct entry *);
+void set(struct entry *, struct entry *);
+void setPrev(struct entry *, struct entry *);
+void setNext(struct entry *, struct entry *);
 char *getName(struct entry *);
 ssize_t setName(char *, struct entry *);
 unsigned int getId(struct entry *);
@@ -112,6 +119,15 @@ void rm(struct entry *en) {
 	TAILQ_REMOVE(&head, en, entries);
 }
 
+struct entry *new(unsigned int id, char *name) {
+	struct entry *en = NULL;
+	en = growArray(en, 1, sizeof(*en));
+	en->id = id;
+	en->name = growArray(en->name, BUFSIZ, sizeof(*(en->name)));
+	strlcpy(en->name, name, BUFSIZ);
+	return en;
+}
+
 struct entry *get(unsigned int i) {
 	foreach (np) {
 		if (np->id == i) {
@@ -146,6 +162,30 @@ struct entry *getNext(struct entry *en) {
 	return next;
 }
 
+void set(struct entry *base, struct entry *en) {
+	assert(base != NULL && en != NULL);
+	if (en->name != NULL) {
+		strlcpy(base->name, en->name, BUFSIZ);
+	}
+	base->id = en->id;
+}
+
+void setPrev(struct entry *base, struct entry *en) {
+	assert(base != NULL && en != NULL);
+	struct entry *prev = getPrev(base);
+	if (prev != NULL) {
+		set(prev, en);
+	}
+}
+
+void setNext(struct entry *base, struct entry *en) {
+	assert(base != NULL && en != NULL);
+	struct entry *next = getNext(base);
+	if (next != NULL) {
+		set(next, en);
+	}
+}
+
 char *getName(struct entry *en) {
 	return (en->name);
 }
@@ -155,10 +195,12 @@ unsigned int getId(struct entry *en) {
 	return en->id;
 }
 
+#if 0
 int cmpId(struct entry *en1, struct entry *en2) {
 	assert(en1 != NULL && en2 != NULL);
 	return (en2->id - en1->id);
 }
+#endif
 
 ssize_t setName(char *name, struct entry *en) {
 	assert(en != NULL && name != NULL);
@@ -188,29 +230,16 @@ int cmpName(struct entry *base, struct entry *next) {
 	return (strcmp(base->name, next->name));
 }
 
-// XXX bug: entries between first and second are lost
 void swap(struct entry *first, struct entry *second) {
 	assert(first != NULL && second != NULL);
-	if (first != second) {
-		struct entry **tqe_prev = first->entries.tqe_prev;
-		*tqe_prev = second;
-
-		second->entries.tqe_prev = first->entries.tqe_prev;
-
-		first->entries.tqe_prev = &(second->entries.tqe_next);
-
-		first->entries.tqe_next = second->entries.tqe_next;
-
-		if (second->entries.tqe_next) {
-			struct entry *tqe_next = second->entries.tqe_next;
-			tqe_next->entries.tqe_prev = &(first->entries.tqe_next);
-		}
-
-		second->entries.tqe_next = first;
-
-		if (head.tqh_last == &(second->entries.tqe_next)) {
-			head.tqh_last = &(first->entries.tqe_next);
-		}
+	if (first->id != second->id) {
+		struct entry *temp = first;
+		printf("first: %s, second: %s, temp: %s\n",
+		    toString(first), toString(second), toString(temp));
+		set(first, second);
+		//set(second, temp);
+		printf("first: %s, second: %s, temp: %s\n",
+		    toString(first), toString(second), toString(temp));
 	}
 }
 
@@ -246,7 +275,6 @@ int main(void) {
 
 	// get the size of one file name, platform dependant
 	unsigned int id = 0;
-	size_t namelen = sizeof(ep->d_name);
 
 	// initialize list
 	TAILQ_INIT(&head);
@@ -257,17 +285,8 @@ int main(void) {
 		return -1;
 	} else {
 		while ((ep = readdir(dp)) != NULL) {
-			if ((ep->d_name[0] != '.') && (strlen(ep->d_name) > 0)) {
-				el0 = NULL; /* feed growArray a valid pointer */
-				el0 = growArray(el0, 1, sizeof(*el0));
-				el0->name = growArray(el0->name, namelen,
-				    sizeof(char));
-				// copy the string in our item
-				strlcpy(el0->name, ep->d_name, namelen);
-				//el0->id = arc4random() % 100;
-				el0->id = id++;
-				// insert the entry in the list
-				add(el0);
+			if ((ep->d_name[0] != '.')) {
+				add(new(id++, ep->d_name));
 			}
 		}
 		if (closedir(dp) == -1) {
@@ -282,9 +301,21 @@ int main(void) {
 	swapNext(get(59));
 	swapPrev(get(59));
 #endif
-	struct entry *first = get(2);
-	struct entry *second = get(40);
+	struct entry *first = get(40);
+	struct entry *second = get(38);
 	swap(first, second);
+
+#if 0
+	// replace next/prev entries
+	struct entry e;
+	e.name = growArray(e.name, BUFSIZ, sizeof(char));
+	strlcpy(e.name, "youri", BUFSIZ);
+	e.id = 99;
+	setPrev(get(61), &e);
+	//setNext(get(50), &e);
+	//set(get(23), &e);
+#endif
+
 
 	// insert before / after
 #if 0
@@ -353,10 +384,7 @@ int main(void) {
 		perror("ll not empty\n");
 	}
 
-	// free entry pointers
-	free(el0);
-	el0 = NULL;
-
+	// free entry pointer
 	free(np);
 	np = NULL;
 
