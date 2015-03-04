@@ -14,11 +14,12 @@
  *	 - cleanup
  *	 - man page
  *	 - warn about not using get() twice in parameters
+ *	 - sort functions
  *	 - ...
  */
 // don't bother with arguments
 #define PATH "/Users/youri/Downloads"
-#define RED "\033[22;32m"
+#define GRN "\033[22;32m"
 #define NOR "\033[00;0m"
 
 
@@ -49,21 +50,37 @@ struct entry *getFirst(void);
 struct entry *getLast(void);
 struct entry *getPrev(struct entry *);
 struct entry *getNext(struct entry *);
-void set(struct entry *, struct entry *);
+struct entry *set(struct entry *, struct entry *);
 void setPrev(struct entry *, struct entry *);
 void setNext(struct entry *, struct entry *);
 char *getName(struct entry *);
 ssize_t setName(char *, struct entry *);
 unsigned int getId(struct entry *);
 size_t getSize(void);
-int cmpName(struct entry *, struct entry *);
-int cmpId(struct entry *, struct entry *);
+int cmpName(const void *, const void *);
+int cmpId(const void *, const void *);
 void swap(struct entry *, struct entry *);
 void swapPrev(struct entry *);
 void swapNext(struct entry *);
 void *toArray(char **);
 bool isEmpty(void);
+void sort(int (*cmp)(const void *, const void *));
 void freeList(void);
+void colorize(const char *, char *);
+
+void sort(int (*cmp)(const void *, const void *)) {
+	unsigned int i = 0;
+	for (i = 0; i < getSize(); i++) {
+		foreach(np) {
+			struct entry *next = getNext(np);
+			if (next != NULL) {
+				if (cmp(np, next) > 0) {
+					swap(np, next);
+				}
+			}
+		}
+	}
+}
 
 void *toArray(char **array) {
 	unsigned int i = 0;
@@ -124,7 +141,9 @@ struct entry *new(unsigned int id, char *name) {
 	en = growArray(en, 1, sizeof(*en));
 	en->id = id;
 	en->name = growArray(en->name, BUFSIZ, sizeof(*(en->name)));
-	strlcpy(en->name, name, BUFSIZ);
+	if (name != NULL) {
+		strlcpy(en->name, name, BUFSIZ);
+	}
 	return en;
 }
 
@@ -156,18 +175,24 @@ struct entry *getNext(struct entry *en) {
 	assert(en != NULL);
 	struct entry *next;
 	next = TAILQ_NEXT(en, entries);
-	if (next == NULL) {
-		printf("end of list\n");
-	}
 	return next;
 }
 
-void set(struct entry *base, struct entry *en) {
-	assert(base != NULL && en != NULL);
+struct entry *set(struct entry *base, struct entry *en) {
+	assert(en != NULL);
+
+	if (base == NULL) {
+		base = new(0, "(null)");
+	}
+
 	if (en->name != NULL) {
 		strlcpy(base->name, en->name, BUFSIZ);
+	} else {
+		base->name = NULL;
 	}
+
 	base->id = en->id;
+	return base;
 }
 
 void setPrev(struct entry *base, struct entry *en) {
@@ -195,12 +220,12 @@ unsigned int getId(struct entry *en) {
 	return en->id;
 }
 
-#if 0
-int cmpId(struct entry *en1, struct entry *en2) {
+int cmpId(const void *a, const void *b) {
+	struct entry *en1 = (struct entry *)a;
+	struct entry *en2 = (struct entry *)b;
 	assert(en1 != NULL && en2 != NULL);
-	return (en2->id - en1->id);
+	return ((int)en2->id - (int)en1->id);
 }
-#endif
 
 ssize_t setName(char *name, struct entry *en) {
 	assert(en != NULL && name != NULL);
@@ -225,21 +250,24 @@ bool isEmpty(void) {
 	return TAILQ_EMPTY(&head);
 }
 
-int cmpName(struct entry *base, struct entry *next) {
-	assert(base != NULL && next != NULL);
-	return (strcmp(base->name, next->name));
+int cmpName(const void *a, const void *b) {
+	struct entry *en1 = (struct entry *)a;
+	struct entry *en2 = (struct entry *)b;
+	assert(en1 != NULL && en2 != NULL);
+	return (strcmp(en1->name, en2->name));
 }
 
 void swap(struct entry *first, struct entry *second) {
 	assert(first != NULL && second != NULL);
 	if (first->id != second->id) {
-		struct entry *temp = first;
-		printf("first: %s, second: %s, temp: %s\n",
-		    toString(first), toString(second), toString(temp));
-		set(first, second);
-		//set(second, temp);
-		printf("first: %s, second: %s, temp: %s\n",
-		    toString(first), toString(second), toString(temp));
+		struct entry *temp = NULL;
+		temp = set(temp, first);
+
+		first = set(first, second);
+		second = set(second, temp);
+
+		free(temp);
+		temp = NULL;
 	}
 }
 
@@ -269,12 +297,23 @@ void swapPrev(struct entry *base) {
 	addBefore(prev, temp);
 }
 
+void colorize(const char *col, char *str) {
+	assert(str != NULL);
+	char *temp = NULL;
+	temp = growArray(temp, BUFSIZ, sizeof(char));
+
+	snprintf(temp, BUFSIZ, "%s%s%s", col ? col : GRN, str, NOR);
+	strlcpy(str, temp, BUFSIZ);
+
+	free(temp);
+	temp = NULL;
+}
+
 int main(void) {
 	DIR                 *dp;
 	struct dirent       *ep;
 
 	// get the size of one file name, platform dependant
-	unsigned int id = 0;
 
 	// initialize list
 	TAILQ_INIT(&head);
@@ -286,7 +325,7 @@ int main(void) {
 	} else {
 		while ((ep = readdir(dp)) != NULL) {
 			if ((ep->d_name[0] != '.')) {
-				add(new(id++, ep->d_name));
+				add(new(arc4random() % 100, ep->d_name));
 			}
 		}
 		if (closedir(dp) == -1) {
@@ -300,10 +339,10 @@ int main(void) {
 	swapNext(get(59));
 	swapNext(get(59));
 	swapPrev(get(59));
-#endif
 	struct entry *first = get(40);
-	struct entry *second = get(38);
+	struct entry *second = get(2);
 	swap(first, second);
+#endif
 
 #if 0
 	// replace next/prev entries
@@ -329,11 +368,6 @@ int main(void) {
 	addBefore(getLast(), &b);
 	addAfter(getLast(), &d);
 #endif
-
-	// print contents
-	foreach (np) {
-		printf("%s\n", toString(np));
-	}
 
 	// get first / last entry
 #if 0
@@ -363,17 +397,16 @@ int main(void) {
 	cleanPtr(array, &count);
 #endif
 
-	// bubble sort
-	//struct entry *en = NULL;
-	//for (int i = 0; i < getSize(); i++) {
-	//	en = get(i);
-	//	if (cmpId(en, getPrev(en)) > 0) {
-	//		puts("bigger");
-	//	} else {
-	//		puts("smaller");
-	//	}
-	//}
-	//en = NULL;
+	// bubble sort items
+#if 0
+	//sort(cmpId);
+	sort(cmpName);
+#endif
+
+	// print contents
+	foreach (np) {
+		printf("%s\n", toString(np));
+	}
 
 	// free allocated memory for each entry
 	// and remove them.
