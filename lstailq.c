@@ -13,9 +13,6 @@
  *	 - simplify head/init with macros
  *	 - cleanup
  *	 - man page
- *	 - warn about not using get() twice in parameters
- *	 - sort functions
- *	 - ...
  */
 // don't bother with arguments
 #define PATH "/Users/youri/Downloads"
@@ -64,7 +61,7 @@ void swapPrev(struct entry *);
 void swapNext(struct entry *);
 void *toArray(char **);
 bool isEmpty(void);
-void sort(int (*cmp)(const void *, const void *));
+void sort(int (*)(const void *, const void *));
 void freeList(void);
 void colorize(const char *, char *);
 
@@ -254,7 +251,7 @@ int cmpName(const void *a, const void *b) {
 	struct entry *en1 = (struct entry *)a;
 	struct entry *en2 = (struct entry *)b;
 	assert(en1 != NULL && en2 != NULL);
-	return (strcmp(en1->name, en2->name));
+	return (strcasecmp(en1->name, en2->name));
 }
 
 void swap(struct entry *first, struct entry *second) {
@@ -274,27 +271,17 @@ void swap(struct entry *first, struct entry *second) {
 void swapNext(struct entry *base) {
 	assert(base != NULL);
 	struct entry *next = getNext(base);
-	struct entry *temp = base;
-	// place the first after the next
-	if (next == NULL) {
-		printf("trying to swap last element.\n");
-		return;
+	if (next != NULL) {
+		swap(base, next);
 	}
-	// remove the base entry and insert
-	rm(base);
-	addAfter(next, temp);
 }
 
 void swapPrev(struct entry *base) {
 	assert(base != NULL);
 	struct entry *prev = getPrev(base);
-	struct entry *temp = base;
-	if (prev == NULL) {
-		printf("trying to swap first element.\n");
-		return;
+	if (prev != NULL) {
+		swap(base, prev);
 	}
-	rm(base);
-	addBefore(prev, temp);
 }
 
 void colorize(const char *col, char *str) {
@@ -313,9 +300,8 @@ int main(void) {
 	DIR                 *dp;
 	struct dirent       *ep;
 
-	// get the size of one file name, platform dependant
-
 	// initialize list
+	unsigned int i = 0;
 	TAILQ_INIT(&head);
 
 	// get a file listing from PATH
@@ -325,7 +311,8 @@ int main(void) {
 	} else {
 		while ((ep = readdir(dp)) != NULL) {
 			if ((ep->d_name[0] != '.')) {
-				add(new(arc4random() % 100, ep->d_name));
+				//add(new(arc4random() % 100, ep->d_name));
+				add(new(i++, ep->d_name));
 			}
 		}
 		if (closedir(dp) == -1) {
@@ -342,6 +329,7 @@ int main(void) {
 	struct entry *first = get(40);
 	struct entry *second = get(2);
 	swap(first, second);
+	swapNext(get(39));
 #endif
 
 #if 0
@@ -397,10 +385,10 @@ int main(void) {
 	cleanPtr(array, &count);
 #endif
 
-	// bubble sort items
 #if 0
+	// bubble sort items
 	//sort(cmpId);
-	sort(cmpName);
+	//sort(cmpName);
 #endif
 
 	// print contents
