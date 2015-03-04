@@ -1,0 +1,3 @@
+[submodule "list"]
+	path = list
+	url = https://privgit.nixers.net/yrmt/list.git
